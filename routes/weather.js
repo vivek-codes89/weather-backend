@@ -30,7 +30,7 @@ router.get("/weather", auth, async (req, res) => {
     const query = city || `${lat},${lon}`;
     const baseUrl = `http://api.weatherstack.com/current`;
     const response = await axios.get(baseUrl, {
-      params: { 
+      params: {
         access_key: apiKey,
         query: query,
       },
@@ -57,47 +57,9 @@ router.get("/weather", auth, async (req, res) => {
 });
 
 // Fetch search logs
-// router.get("/logs", auth, async (req, res) => {
-//   try {
-//     // Fetch all logs with user information
-//     const [logs] = await pool.execute(
-//       `SELECT 
-//          logs.id as log_id, 
-//          logs.query as log_query, 
-//          logs.timestamp as log_timestamp, 
-//          logs.latitude, 
-//          logs.longitude,
-//          users.username as user_username,
-//          users.first_name as user_first_name,
-//          users.last_name as user_last_name,
-//          users.email as user_email
-//        FROM logs
-//        JOIN users ON logs.user_id = users.id`
-//     );
-
-//     // If no logs are found, return an empty array
-//     if (logs.length === 0) {
-//       return res.status(404).json({ message: "No logs found" });
-//     }
-
-//     // Return the logs in the response
-//     res.json({
-//       logs, // All logs with user information
-//     });
-//   } catch (err) {
-//     res.status(500).json({
-//       message: "Error fetching logs",
-//       error: err.message,
-//     });
-//   }
-// });
-
 router.get("/logs", auth, async (req, res) => {
   try {
-    // Extract user_id from the authenticated user (from auth middleware)
-    const userId = req.user.id; 
-
-    // Fetch logs only for the logged-in user
+    // Fetch all logs with user information
     const [logs] = await pool.execute(
       `SELECT 
          logs.id as log_id, 
@@ -110,19 +72,17 @@ router.get("/logs", auth, async (req, res) => {
          users.last_name as user_last_name,
          users.email as user_email
        FROM logs
-       JOIN users ON logs.user_id = users.id
-       WHERE logs.user_id = ?`,
-      [userId] // Pass the userId as a parameter to the query
+       JOIN users ON logs.user_id = users.id`
     );
 
-    // If no logs are found for the user, return an empty array
+    // If no logs are found, return an empty array
     if (logs.length === 0) {
-      return res.status(404).json({ message: "No logs found for the user" });
+      return res.status(404).json({ message: "No logs found" });
     }
 
-    // Return the user's logs in the response
+    // Return the logs in the response
     res.json({
-      logs, // User-specific logs
+      logs, // All logs with user information
     });
   } catch (err) {
     res.status(500).json({
